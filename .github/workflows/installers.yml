@@ -1,0 +1,64 @@
+name: Desktop installers
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: windows-2022
+            package: windows-x64
+          - runner: ubuntu-22.04
+            package: linux-amd64
+          - runner: macos-15
+            package: macos-arm64
+          - runner: macos-15-intel
+            package: macos-x86_64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust
+        run: rustup toolchain install 1.95.0 --profile minimal
+      - name: Install Linux build libraries
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libegl1-mesa-dev libgl1-mesa-dev libx11-dev libwayland-dev libxkbcommon-dev libxkbcommon-x11-dev
+      - name: Test and build
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          cargo +1.95.0 test --locked --release
+          cargo +1.95.0 build --locked --release
+          node --test tests/extension.cjs
+      - name: Test and build Windows
+        if: runner.os == 'Windows'
+        env:
+          RUSTFLAGS: -C target-feature=+crt-static
+        run: |
+          cargo +1.95.0 test --locked --release
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          cargo +1.95.0 build --locked --release
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          node --test tests/extension.cjs
+      - name: Build Windows installer
+        if: runner.os == 'Windows'
+        run: |
+          $iscc = Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6\ISCC.exe'
+          & $iscc packaging\windows.iss
+      - name: Build Linux or macOS installer
+        if: runner.os != 'Windows'
+        shell: bash
+        run: bash packaging/unix.sh
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.package }}
+          path: dist/*
+          if-no-files-found: error

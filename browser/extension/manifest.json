@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "Parally",
+  "version": "0.5.0",
+  "description": "Send browser downloads to Parally. Click the toolbar button to turn it off or on.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAp/9eZIl1DA0nvAjJLuHV8mwIW4jDnpRPZYxReTIIOjErN3Ml5296+/Pv32r9sOHRe8AgDrl3W8T9L4kX1GkyAiQ8kDVV385js2SvKYjDg0utygxrxMjUWd698axx7Db/qj0N24rWhklG0M8bKAickZ58mALBet/6qgWg4rN/oh2lJxBgVdZ2xTTuY4r+sc6kdQ0AzHyy2x/GYkGBr72fstMF/ND3kdUEwoDHkZMYx1OliujU+lpufJ/RKhoCFoMe+0UdNGwFGQCdCuc8ila1kfCJu3SBd8jWFKwE4bpXVG72pxNHYf93e2YtkIGbqbtxM2nbnzlaqP0SRk4XUb4hLQIDAQAB",
+  "icons": { "16": "icons/16.png", "32": "icons/32.png", "48": "icons/48.png", "128": "icons/128.png" },
+  "action": { "default_icon": { "16": "icons/16.png", "32": "icons/32.png" } },
+  "permissions": ["contextMenus", "cookies", "downloads", "nativeMessaging", "storage"],
+  "host_permissions": ["http://*/*", "https://*/*"],
+  "background": { "service_worker": "background.js" }
+}

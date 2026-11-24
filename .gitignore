@@ -1,0 +1,9 @@
+/target/
+/dist/
+/release/
+/release-*/
+/*.exe
+/*.lnk
+/*.png
+/*.jpg
+__pycache__/
