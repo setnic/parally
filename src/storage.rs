@@ -356,30 +356,6 @@ impl Job {
     }
 }
 
-pub fn open_partial(path: &Path) -> Result<(String, PathBuf, usize)> {
-    ensure!(
-        path.file_name().is_some_and(|name| name == MANIFEST),
-        "Select a resume.json file."
-    );
-    let dir = path.parent().context("Invalid resume folder")?;
-    ensure!(
-        metadata(dir)?.is_some_and(|item| item.is_dir()),
-        "Invalid resume folder."
-    );
-    let manifest = Manifest::read(path)?;
-    ensure!(
-        dir.file_name()
-            .and_then(|name| name.to_str())
-            .is_some_and(|name| name.eq_ignore_ascii_case(&sidecar_name(&manifest.name))),
-        "Open resume.json from its original download folder."
-    );
-    let destination = dir
-        .parent()
-        .context("Invalid destination folder")?
-        .join(&manifest.name);
-    Ok((manifest.url, destination, manifest.streams))
-}
-
 pub fn resume_manifest(destination: &Path) -> Option<PathBuf> {
     let name = destination
         .file_name()?

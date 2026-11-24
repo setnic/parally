@@ -59,8 +59,6 @@ pub fn text(english: &str) -> &str {
         "Connections" => "Соединения",
         "Download" => "Скачать",
         "Downloads" => "Загрузки",
-        "Open Partial…" => "Открыть часть…",
-        "Tray status" => "Панель в трее",
         "No downloads yet." => "Загрузок пока нет.",
         "No active downloads" => "Нет загрузок",
         "Open Folder" => "Открыть папку",
@@ -104,7 +102,6 @@ pub fn text(english: &str) -> &str {
             "Трей недоступен. Чтобы закрыть Parally, нажмите «Выход»."
         }
         "Save download as" => "Сохранить загрузку как",
-        "Open partial download" => "Открыть частичную загрузку",
         "Add folder preset" => "Добавить папку",
         "The server returned a web page. Open the link in your browser and copy the direct file download link." => {
             "Сервер вернул веб-страницу. Откройте ссылку в браузере и скопируйте прямую ссылку на файл."

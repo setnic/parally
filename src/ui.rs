@@ -212,29 +212,6 @@ impl App {
         ui.add_space(8.0);
         ui.horizontal(|ui| {
             ui.label(RichText::new(text("Downloads")).size(18.0).strong());
-            ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-                if ui
-                    .add_enabled(!self.exiting, glass::button("Open Partial…", false, 120.0))
-                    .clicked()
-                {
-                    self.picker = Some((Picker::new(Kind::Partial, &self.destination, ""), false));
-                }
-                #[cfg(windows)]
-                if self.tray.is_some()
-                    && self.panel.is_some()
-                    && ui.button(text("Tray status")).clicked()
-                {
-                    let mut point = POINT::default();
-                    unsafe { GetCursorPos(&mut point) };
-                    if let Some(rect) = self.tray.as_ref().and_then(TrayIcon::rect) {
-                        point = POINT {
-                            x: rect.position.x as i32,
-                            y: rect.position.y as i32,
-                        };
-                    }
-                    self.toggle_panel(ctx, point);
-                }
-            });
         });
         if !self.notice.is_empty() {
             ui.label(text(&self.notice));

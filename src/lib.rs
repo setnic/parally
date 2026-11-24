@@ -483,10 +483,6 @@ pub fn validate_url(text: &str) -> Result<url::Url> {
     Ok(url)
 }
 
-pub fn open_partial(path: &Path) -> Result<(String, std::path::PathBuf, usize)> {
-    storage::open_partial(path)
-}
-
 pub fn resume_manifest(path: &Path) -> Option<std::path::PathBuf> {
     storage::resume_manifest(path)
 }

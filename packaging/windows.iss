@@ -1,14 +1,14 @@
 ﻿[Setup]
 AppId={{7BEE9937-01B7-4A61-A74C-90D5A19FC5C8}
 AppName=Parally
-AppVersion=0.5.1
+AppVersion=0.5.2
 DefaultDirName={localappdata}\Programs\Parally
 DefaultGroupName=Parally
 PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 OutputDir=..\dist
-OutputBaseFilename=Parally-0.5.1-windows-x64-setup
+OutputBaseFilename=Parally-0.5.2-windows-x64-setup
 SetupIconFile=..\assets\parally.ico
 UninstallDisplayIcon={app}\parally.ico
 Compression=lzma2
@@ -40,7 +40,8 @@ var
 begin
   if CurUninstallStep = usUninstall then begin
     if RegQueryStringValue(HKCU, 'Software\Microsoft\Windows\CurrentVersion\Run', 'Parally', Startup)
-      and (CompareText(Startup, '"' + ExpandConstant('{app}\release-0.4\Parally.exe') + '"') = 0) then
+      and ((CompareText(Startup, '"' + ExpandConstant('{app}\release-0.4\Parally.exe') + '" --tray') = 0)
+        or (CompareText(Startup, '"' + ExpandConstant('{app}\release-0.4\Parally.exe') + '"') = 0)) then
       RegDeleteValue(HKCU, 'Software\Microsoft\Windows\CurrentVersion\Run', 'Parally');
   end;
 end;

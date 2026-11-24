@@ -1,6 +1,6 @@
 [package]
 name = "parallel-downloader"
-version = "0.5.1"
+version = "0.5.2"
 edition = "2024"
 rust-version = "1.95"
 description = "Desktop download manager with parallel ranges, resumable checkpoints and Chromium browser handoff"

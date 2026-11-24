@@ -12,18 +12,17 @@ use windows::{
             CoTaskMemFree, CoUninitialize, IBindCtx,
         },
         UI::Shell::{
-            Common::COMDLG_FILTERSPEC, FOS_DONTADDTORECENT, FOS_FILEMUSTEXIST, FOS_FORCEFILESYSTEM,
+            FOS_DONTADDTORECENT, FOS_FORCEFILESYSTEM,
             FOS_NOCHANGEDIR, FOS_PATHMUSTEXIST, FOS_PICKFOLDERS, FileOpenDialog, FileSaveDialog,
             IFileDialog, IShellItem, SHCreateItemFromParsingName, SIGDN_FILESYSPATH,
         },
     },
-    core::{HRESULT, IUnknown, PCWSTR, w},
+    core::{HRESULT, IUnknown, PCWSTR},
 };
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Kind {
     Save,
-    Partial,
     Folder,
 }
 
@@ -85,10 +84,6 @@ impl Picker {
             FOS_FORCEFILESYSTEM | FOS_NOCHANGEDIR | FOS_DONTADDTORECENT | FOS_PATHMUSTEXIST;
         let title = match self.kind {
             Kind::Save => "Save download as",
-            Kind::Partial => {
-                options |= FOS_FILEMUSTEXIST;
-                "Open partial download"
-            }
             Kind::Folder => {
                 options |= FOS_PICKFOLDERS;
                 "Add folder preset"
@@ -97,12 +92,6 @@ impl Picker {
         unsafe {
             dialog.SetOptions(options)?;
             dialog.SetTitle(PCWSTR(wide(OsStr::new(crate::i18n::text(title))).as_ptr()))?;
-            if self.kind == Kind::Partial {
-                dialog.SetFileTypes(&[COMDLG_FILTERSPEC {
-                    pszName: w!("Resume files"),
-                    pszSpec: w!("resume.json"),
-                }])?;
-            }
             if self.kind == Kind::Save {
                 let name = self
                     .path
@@ -141,14 +130,11 @@ mod tests {
     #[test]
     fn configures_all_three_windows_dialogs_without_showing_them() -> Result<()> {
         let _com = Apartment::enter()?;
-        for kind in [Kind::Save, Kind::Partial, Kind::Folder] {
+        for kind in [Kind::Save, Kind::Folder] {
             let dialog = Picker::new(kind, "", "sample.zip").configure()?;
             let options = unsafe { dialog.GetOptions()? };
             assert!(options.contains(FOS_FORCEFILESYSTEM));
             assert_eq!(options.contains(FOS_PICKFOLDERS), kind == Kind::Folder);
-            if kind == Kind::Partial {
-                assert!(options.contains(FOS_FILEMUSTEXIST));
-            }
             if kind == Kind::Save {
                 assert!(!options.contains(windows::Win32::UI::Shell::FOS_OVERWRITEPROMPT));
                 let name = unsafe { dialog.GetFileName()? };

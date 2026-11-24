@@ -7,7 +7,6 @@ use std::{
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Kind {
     Save,
-    Partial,
     Folder,
 }
 
@@ -29,7 +28,6 @@ impl Picker {
     pub fn show(&self) -> Result<Option<PathBuf>> {
         let title = crate::i18n::text(match self.kind {
             Kind::Save => "Save download as",
-            Kind::Partial => "Open partial download",
             Kind::Folder => "Add folder preset",
         });
         let folder = if self.path.is_dir() {
@@ -55,11 +53,6 @@ impl Picker {
                         .arg("--save")
                         .arg(format!("--filename={}", folder.join(name).display()));
                 }
-                Kind::Partial => {
-                    dialog
-                        .arg("--file-filter=Resume files | resume.json")
-                        .arg(format!("--filename={}/", folder.display()));
-                }
                 Kind::Folder => {
                     dialog
                         .arg("--directory")
@@ -76,7 +69,6 @@ impl Picker {
                 Kind::Save => {
                     "choose file name with prompt item 1 of argv default location startDir default name item 3 of argv"
                 }
-                Kind::Partial => "choose file with prompt item 1 of argv default location startDir",
                 Kind::Folder => {
                     "choose folder with prompt item 1 of argv default location startDir"
                 }

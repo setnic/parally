@@ -1,6 +1,6 @@
 use parallel_downloader::{
     BrowserHeaders, Cancelled, Download, RestartRequired, StartMode, discard_partial,
-    open_partial, partial_occupies, saved_progress,
+    partial_occupies, saved_progress,
 };
 use std::{
     fs,
@@ -538,9 +538,7 @@ fn interrupted_ranges_resume_in_another_process() {
     let server = Server::new(Mode::Interrupted);
     child(&server, &server.url, &folder.destination(), true);
     assert_eq!(server.segments().len(), 12);
-    let (url, destination, streams) = open_partial(&folder.manifest()).unwrap();
-    assert_eq!(destination, folder.destination());
-    assert_eq!(streams, 3);
+    let (url, destination) = (server.url.clone(), folder.destination());
     server.mode(Mode::Range);
     child(&server, &url, &destination, false);
     assert_eq!(

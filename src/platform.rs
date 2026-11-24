@@ -33,7 +33,7 @@ pub fn set_startup(enabled: bool) -> Result<()> {
         .stdout(Stdio::null())
         .stderr(Stdio::null());
     let executable = std::env::current_exe()?;
-    let path = format!("\"{}\"", executable.display());
+    let path = format!("\"{}\" --tray", executable.display());
     let args = if enabled {
         vec![
             "add", RUN, "/v", "Parally", "/t", "REG_SZ", "/d", &path, "/f",
@@ -71,7 +71,7 @@ pub fn set_startup(enabled: bool) -> Result<()> {
         home.join("Library/LaunchAgents/com.parally.app.plist"),
         format!(
             r#"<?xml version="1.0" encoding="UTF-8"?>
-<plist version="1.0"><dict><key>Label</key><string>com.parally.app</string><key>ProgramArguments</key><array><string>{}</string></array><key>RunAtLoad</key><true/></dict></plist>"#,
+<plist version="1.0"><dict><key>Label</key><string>com.parally.app</string><key>ProgramArguments</key><array><string>{}</string><string>--tray</string></array><key>RunAtLoad</key><true/></dict></plist>"#,
             executable
                 .replace('&', "&amp;")
                 .replace('<', "&lt;")
@@ -96,7 +96,7 @@ pub fn set_startup(enabled: bool) -> Result<()> {
             .replace('%', "%%");
         (
             config.join("autostart/com.parally.app.desktop"),
-            format!("[Desktop Entry]\nType=Application\nName=Parally\nExec=\"{escaped}\"\n"),
+            format!("[Desktop Entry]\nType=Application\nName=Parally\nExec=\"{escaped}\" --tray\n"),
         )
     };
     if enabled {

@@ -24,7 +24,7 @@ use eframe::egui::{
 use i18n::text;
 use library::{Entry, Library, Scale, State};
 use parallel_downloader::{
-    Cancelled, Download, MAX_STREAMS, RestartRequired, StartMode, discard_partial, open_partial,
+    Cancelled, Download, MAX_STREAMS, RestartRequired, StartMode, discard_partial,
     validate_url,
 };
 use picker::{Kind, Picker};
@@ -55,7 +55,7 @@ use windows_sys::{
         Foundation::POINT,
         UI::{
             Shell::ShellExecuteW,
-            WindowsAndMessaging::{GetCursorPos, MB_ICONERROR, MB_OK, MessageBoxW, SW_SHOWNORMAL},
+            WindowsAndMessaging::{MB_ICONERROR, MB_OK, MessageBoxW, SW_SHOWNORMAL},
         },
     },
     w,
@@ -133,6 +133,7 @@ impl App {
         root: PathBuf,
         lock: File,
         library: Library,
+        in_tray: bool,
     ) -> Self {
         i18n::set_russian(library.settings.russian);
         glass::style(ctx, library.settings.light);
@@ -204,6 +205,11 @@ impl App {
             confirm: None,
             window_geometry: (0.0, 0.0, 0.0),
             intake: None,
+            // Started at login: stay in the tray. eframe shows the window after the first
+            // frame, so update() hides it again on the second.
+            #[cfg(windows)]
+            hidden: in_tray && tray.is_some(),
+            #[cfg(not(windows))]
             hidden: false,
             exiting: false,
             #[cfg(windows)]
@@ -653,26 +659,6 @@ impl App {
         }
     }
 
-    fn restore(&mut self, path: &Path) -> Result<()> {
-        let (url, destination, streams) = open_partial(path)?;
-        let destination = library::normalize_destination(&destination)?;
-        if let Some(entry) = self.library.entries.iter().find(|entry| {
-            library::same_path(&entry.path, &destination)
-                && entry.state != State::Complete
-                && !entry.canceled
-        }) {
-            self.notice = format!("{} is in Downloads.", filename(&entry.path));
-            return Ok(());
-        }
-        let mut entry = Entry::new(self.library.next_id(), url, destination, streams);
-        entry.state = State::Paused;
-        entry.read_checkpoint();
-        self.library.entries.push(entry);
-        self.notice = "Partial download added.".into();
-        self.save();
-        Ok(())
-    }
-
     fn show_picker(&mut self) {
         if let Some((picker, browser)) = self.picker.take() {
             #[cfg(windows)]
@@ -682,7 +668,6 @@ impl App {
             let outcome = selection.and_then(|selection| {
                 let Some(path) = selection else { return Ok(()) };
                 match picker.kind {
-                    Kind::Partial => self.restore(&path),
                     Kind::Save => {
                         let text = path.to_string_lossy().into_owned();
                         if browser {
@@ -802,6 +787,12 @@ impl eframe::App for App {
         }
         #[cfg(windows)]
         self.main_glass.update_main(_frame, ctx.pixels_per_point());
+        if self.hidden && ctx.cumulative_pass_nr() == 1 {
+            ctx.send_viewport_cmd(ViewportCommand::Visible(false));
+        }
+        if self.hidden && ctx.cumulative_pass_nr() == 0 {
+            ctx.request_repaint();
+        }
         ctx.request_repaint_after(TICK);
         #[cfg(windows)]
         while let Ok(event) = self.tray_events.try_recv() {
@@ -978,7 +969,7 @@ fn open_path(path: &Path) -> Result<()> {
     }
 }
 
-fn app(browser: bool) -> Result<()> {
+fn app(browser: bool, in_tray: bool) -> Result<()> {
     let root = library::root()?;
     let Some(lock) = library::try_instance_lock(&root)? else {
         if !browser {
@@ -988,7 +979,14 @@ fn app(browser: bool) -> Result<()> {
     };
     let library = Library::load(&root)?;
     // The extension finds Parally through this registration; the settings guide reports errors.
-    thread::spawn(|| platform::register_browsers(true));
+    let startup = library.settings.start_at_login;
+    thread::spawn(move || {
+        let _ = platform::register_browsers(true);
+        // Rewrites entries from older versions, which opened the window at login.
+        if startup {
+            let _ = platform::set_startup(true);
+        }
+    });
     let logo = glass::logo();
     let icon = glass::icon_data(&logo);
     let options = eframe::NativeOptions {
@@ -1019,6 +1017,7 @@ fn app(browser: bool) -> Result<()> {
                 root,
                 lock,
                 library,
+                in_tray,
             )))
         }),
     )
@@ -1032,7 +1031,7 @@ fn main() {
         bridge::native_host();
     } else if argument == "--disconnect-browsers" {
         let _ = platform::register_browsers(false);
-    } else if let Err(error) = app(argument == "--browser-request") {
+    } else if let Err(error) = app(argument == "--browser-request", argument == "--tray") {
         #[cfg(not(windows))]
         eprintln!("Parally could not open. {}", error_text(&error));
         #[cfg(windows)]
