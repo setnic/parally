@@ -1,14 +1,14 @@
 ﻿[Setup]
 AppId={{7BEE9937-01B7-4A61-A74C-90D5A19FC5C8}
 AppName=Parally
-AppVersion=0.5.0
+AppVersion=0.5.1
 DefaultDirName={localappdata}\Programs\Parally
 DefaultGroupName=Parally
 PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 OutputDir=..\dist
-OutputBaseFilename=Parally-0.5.0-windows-x64-setup
+OutputBaseFilename=Parally-0.5.1-windows-x64-setup
 SetupIconFile=..\assets\parally.ico
 UninstallDisplayIcon={app}\parally.ico
 Compression=lzma2
